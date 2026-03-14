@@ -1,0 +1,45 @@
+@startuml C4_Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_LEFT_RIGHT()
+
+Person(customer, "Cliente del Banco", "Usuario final")
+
+System_Boundary(banking_system, "Sistema de Banca por Internet BP") {
+    Container(web_app, "SPA Web", "React", "Aplicación web para navegadores")
+    Container(mobile_app, "Aplicación Móvil", "Flutter", "App iOS/Android con Onboarding biométrico")
+    
+    Container(api_gateway, "API Gateway", "AWS API Gateway", "Punto único de entrada, ruteo y validación de tokens JWT")
+    
+    Container(ms_movements, "Microservicio de Movimientos", "Node.js / Java", "Lógica de consulta de históricos y cuentas")
+    Container(ms_transfers, "Microservicio de Transferencias", "Node.js / Java", "Lógica de pagos y transferencias")
+    Container(ms_audit, "Microservicio de Auditoría", "Go / Python", "Registra todas las acciones")
+    
+    ContainerDb(redis_cache, "Caché de Datos", "Amazon ElastiCache", "Almacena datos temporales (Cache-Aside) para baja latencia")
+    ContainerDb(audit_db, "Base de Datos de Auditoría", "Amazon DynamoDB / QLDB", "Registro inmutable de acciones")
+    Container(event_bus, "Bus de Eventos", "AWS EventBridge / SNS", "Orquestación asíncrona de eventos")
+}
+
+System_Ext(core_banking, "Plataforma Core", "Sistemas externos")
+System_Ext(idp, "Identity Provider", "OAuth 2.0 / Biometría")
+
+Rel(customer, web_app, "Visita usando [HTTPS]")
+Rel(customer, mobile_app, "Usa app")
+
+Rel(web_app, api_gateway, "Llamadas API [JSON/HTTPS]")
+Rel(mobile_app, api_gateway, "Llamadas API [JSON/HTTPS]")
+Rel(web_app, idp, "Flujo PKCE")
+Rel(mobile_app, idp, "Flujo PKCE + Biometría")
+
+Rel(api_gateway, ms_movements, "Ruta peticiones")
+Rel(api_gateway, ms_transfers, "Ruta peticiones")
+
+Rel(ms_movements, redis_cache, "Lee/Escribe caché")
+Rel(ms_movements, core_banking, "Consulta [REST/SOAP]")
+
+Rel(ms_transfers, core_banking, "Ejecuta pago [REST/SOAP]")
+Rel(ms_transfers, event_bus, "Publica evento de transferencia")
+
+Rel(event_bus, ms_audit, "Dispara registro")
+Rel(ms_audit, audit_db, "Guarda log")
+@enduml

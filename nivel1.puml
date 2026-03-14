@@ -1,0 +1,20 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+Person(customer, "Cliente del Banco", "Cliente que utiliza canales digitales para sus transacciones.")
+
+System(digital_banking, "Sistema de Banca por Internet BP", "Permite a los clientes ver históricos, transferencias y pagos.")
+
+System_Ext(core_banking, "Plataforma Core", "Sistema heredado con datos básicos, movimientos y productos.")
+System_Ext(complementary_system, "Sistema Complementario", "Provee información detallada del cliente.")
+System_Ext(notification_system, "Sistema de Notificaciones", "Envía SMS/Emails a los clientes.")
+System_Ext(identity_provider, "Proveedor de Identidad (IdP)", "Gestiona OAuth 2.0 y biometría (ej. Auth0/Cognito).")
+
+Rel(customer, digital_banking, "Consulta saldos y hace transferencias")
+Rel(customer, identity_provider, "Se autentica (Credenciales/Biometría)")
+Rel(digital_banking, identity_provider, "Valida tokens")
+Rel(digital_banking, core_banking, "Obtiene datos e instruye pagos")
+Rel(digital_banking, complementary_system, "Obtiene detalles extendidos")
+Rel(digital_banking, notification_system, "Envía eventos de notificación")
+
+@enduml
